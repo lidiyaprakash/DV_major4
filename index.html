@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Visualization of CT scan images using Contour Map</title>
+
+    
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+
+        <style>
+
+            #Time {
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 14pt;
+            }
+
+            .custom_legend_text {
+                font-family:'Times New Roman', Times, serif;
+                font-size: 6pt;
+            }
+
+            #Visualization {
+                flex: 0 0 80%;
+                margin-right: 10px;
+            }
+        .custom_slider {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 80%;
+        }
+
+        .contour-path {
+            fill: none;
+            stroke-width: 0.5px;
+            stroke-linejoin: round;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="CustomContainer">
+    <h1>MAJOR ASSIGNMENT 4</h1>
+    <h3>Mathi Lidiya</h3>
+</div>
+
+<svg width="80vw" viewbox="0 0 1200 1000"></svg>
+     <div id='Currenttime'>
+     </div>
+
+    <div class="custom_slider">
+        <input type="range" min="0" max="100" value="0" class="custom_slider" id="updatedSlider">
+     </div>
+
+<script>
+
+    const file_name = 'Data_CT.csv';
+    let svg = d3.select("svg");
+
+    const new_path = d3.geoPath();
+
+    function plot_new_contour(fileName,  threshold) {
+        d3.csv("https://raw.githubusercontent.com/umassdgithub/Fall-2023-DataViz/main/Major-Assignment-4/data/Data_CT.csv").then(function (data) {
+            let m = 512, n = 512;
+
+            let val_Temp = [];
+            data.forEach(function (entry) {
+                val_Temp.push(+entry[0])
+            });
+
+            const min_value = d3.min(val_Temp);
+            const max_value = d3.max(val_Temp);
+
+            let color_scale = d3.scaleLinear()
+                .domain(d3.range(min_value, max_value,
+                    parseInt(Math.abs(max_value - min_value) / 6.5)))
+                .range(["#0d1a50", "#3e5eba", "#2b83ba",
+                    "#abdda4", "#ffffbf", "#fdae61", "#d7191c"])
+                .interpolate(d3.interpolateHcl);
+
+            let contourGenerator = d3.contours()
+                .size([m, n])
+                .thresholds(d3.range(min_value, max_value, 6.5))
+                (val_Temp);
+
+            svg.select(".contours").remove();
+
+            svg.append("g").attr("class", "contours")
+                .selectAll("path")
+                .data(contourGenerator)
+                .enter()
+                .append("path")
+                .attr("class", "contour-path")
+                .attr("d", function (entry) { return new_path(entry); })
+                .attr("stroke", function (entry) { return color_scale(entry.value); })
+                .attr("stroke-width", ".5px");
+        });
+    }
+
+    const custom_slider = document.getElementById("updatedSlider");
+    custom_slider.addEventListener("input", function () {
+        const threshold = custom_slider.value / 100.0;
+        plot_new_contour(file_name, threshold);
+    });
+
+    plot_new_contour(file_name, 0);
+
+</script>
+</body>
+
+</html>
